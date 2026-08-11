@@ -1,8 +1,11 @@
-const Database = require('better-sqlite3');
-const path = require('path');
+import Database from 'better-sqlite3';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const db = new Database(path.join(__dirname, 'coffeeshop.db'));
-
 db.pragma('journal_mode = WAL');
 
 db.exec(`
@@ -14,7 +17,6 @@ CREATE TABLE IF NOT EXISTS products (
   description TEXT,
   image TEXT
 );
-
 CREATE TABLE IF NOT EXISTS orders (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   items TEXT NOT NULL,
@@ -22,7 +24,6 @@ CREATE TABLE IF NOT EXISTS orders (
   status TEXT DEFAULT 'pending',
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
-
 CREATE TABLE IF NOT EXISTS rewards (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id TEXT NOT NULL DEFAULT 'guest',
@@ -46,6 +47,7 @@ const insert = db.prepare(`INSERT OR IGNORE INTO products (id, name, category, p
 const insertMany = db.transaction((rows) => {
   for (const row of rows) insert.run(row);
 });
+
 insertMany(seedProducts);
 
-module.exports = db;
+export default db;
