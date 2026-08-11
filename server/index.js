@@ -1,7 +1,8 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const db = require('./db');
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import db from './db.js';
+import { GoogleGenerativeAI } from '@google/genai';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -29,7 +30,6 @@ app.post('/api/checkout', (req, res) => {
   }
   const insert = db.prepare('INSERT INTO orders (items, total, status) VALUES (?, ?, ?)');
   const result = insert.run(JSON.stringify(items), total, 'confirmed');
-
   const pointsEarned = Math.floor(total);
   const existing = db.prepare('SELECT * FROM rewards WHERE user_id = ?').get('guest');
   if (existing) {
@@ -37,7 +37,6 @@ app.post('/api/checkout', (req, res) => {
   } else {
     db.prepare('INSERT INTO rewards (user_id, points) VALUES (?, ?)').run('guest', pointsEarned);
   }
-
   res.json({ orderId: result.lastInsertRowid, status: 'confirmed', pointsEarned });
 });
 
@@ -56,10 +55,8 @@ app.get('/api/rewards', (req, res) => {
 // --- AI Barista Proxy ---
 app.post('/api/barista', async (req, res) => {
   try {
-    const { GoogleGenerativeAI } = require('@google/genai');
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) return res.status(500).json({ error: 'AI service not configured' });
-
     const { message } = req.body;
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
@@ -73,7 +70,6 @@ app.post('/api/barista', async (req, res) => {
 });
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
-
 app.listen(PORT, () => {
   console.log(`Coffee-Shop server running on port ${PORT}`);
 });
