@@ -2,7 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import db from './db.js';
-import { GoogleGenerativeAI } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -58,10 +58,12 @@ app.post('/api/barista', async (req, res) => {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) return res.status(500).json({ error: 'AI service not configured' });
     const { message } = req.body;
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    const result = await model.generateContent(message);
-    const text = result.response.text();
+    const ai = new GoogleGenAI({ apiKey });
+    const result = await ai.models.generateContent({
+      model: 'gemini-1.5-flash',
+      contents: message,
+    });
+    const text = result.text;
     res.json({ reply: text });
   } catch (err) {
     console.error('Barista error:', err.message);
